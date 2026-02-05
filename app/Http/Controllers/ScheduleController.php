@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Lesson;
+use App\Models\ScheduleDay;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
 
@@ -19,6 +20,13 @@ class ScheduleController extends Controller
 
         $date = $request->input('date', now()->toDateString());
 
+        $scheduleDay = ScheduleDay::firstOrCreate(
+            ['user_id' => $userId, 'date' => $date],
+            ['is_locked' => false, 'locked_at' => null]
+        );
+
+        $isLocked = (bool) $scheduleDay->is_locked;
+
         // Create 30-minute slots from 14:00 (2 PM) to 23:30 (11:30 PM)
         $period = CarbonPeriod::create('14:00', '30 minutes', '23:30');
 
@@ -28,16 +36,27 @@ class ScheduleController extends Controller
             // Key strictly by the raw DB time string (HH:MM:SS)
             ->keyBy(fn (Lesson $lesson) => $lesson->getRawOriginal('start_time'));
 
-        return view('schedule.index', compact('date', 'period', 'lessons'));
+        return view('schedule.index', compact('date', 'period', 'lessons', 'isLocked'));
     }
 
     /**
-    * Save the daily schedule.
+    * Save the daily schedule and lock it.
     */
-    public function store(Request $request)
+    public function save(Request $request)
     {
         $userId = 1;
         $date = $request->input('date');
+
+        $scheduleDay = ScheduleDay::firstOrCreate(
+            ['user_id' => $userId, 'date' => $date],
+            ['is_locked' => false, 'locked_at' => null]
+        );
+
+        if ($scheduleDay->is_locked) {
+            return redirect()
+                ->route('schedule.index', ['date' => $date])
+                ->with('status', 'This day is locked. Click Update to edit.');
+        }
 
         $slots = $request->input('slots', []); // [ '14:00:00' => [...], ... ]
 
@@ -68,9 +87,37 @@ class ScheduleController extends Controller
             );
         }
 
+        $scheduleDay->forceFill([
+            'is_locked' => true,
+            'locked_at' => now(),
+        ])->save();
+
         return redirect()
             ->route('schedule.index', ['date' => $date])
-            ->with('status', 'Schedule updated.');
+            ->with('status', 'Schedule saved and locked.');
+    }
+
+    /**
+     * Unlock a day's schedule so it can be edited.
+     */
+    public function unlock(Request $request)
+    {
+        $userId = 1;
+        $date = $request->input('date');
+
+        $scheduleDay = ScheduleDay::firstOrCreate(
+            ['user_id' => $userId, 'date' => $date],
+            ['is_locked' => false, 'locked_at' => null]
+        );
+
+        $scheduleDay->forceFill([
+            'is_locked' => false,
+            'locked_at' => null,
+        ])->save();
+
+        return redirect()
+            ->route('schedule.index', ['date' => $date])
+            ->with('status', 'Editing enabled. Make your changes, then click Save to lock again.');
     }
 }
 

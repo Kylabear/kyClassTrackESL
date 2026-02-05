@@ -10,7 +10,8 @@ Route::get('/', function () {
 
 // Schedule routes
 Route::get('/schedule', [ScheduleController::class, 'index'])->name('schedule.index');
-Route::post('/schedule', [ScheduleController::class, 'store'])->name('schedule.store');
+Route::post('/schedule/save', [ScheduleController::class, 'save'])->name('schedule.save');
+Route::post('/schedule/unlock', [ScheduleController::class, 'unlock'])->name('schedule.unlock');
 
 // Report routes
 Route::get('/reports/monthly', [ReportController::class, 'monthly'])->name('reports.monthly');

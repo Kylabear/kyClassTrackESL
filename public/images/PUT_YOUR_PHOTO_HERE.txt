@@ -1,0 +1,13 @@
+Add your photo here and name it:
+
+  kyla.jpg
+
+Full path:
+  public/images/kyla.jpg
+
+Then refresh your browser and the photo will appear in the navbar next to "Kylas Sched".
+
+Tips:
+- Use a square image (e.g., 400x400) for best results.
+- JPG or PNG both work.
+
