@@ -34,28 +34,82 @@
         </div>
         <div class="col-6 col-md-2">
             <div class="app-card glass-card p-3 text-center h-100">
-                <div class="fs-4 fw-bold">{{ $totalClasses }}</div>
+                <div class="fs-4 fw-bold unlockable" data-value="{{ $totalClasses }}" data-label="Monthly Classes">*****</div>
                 <div class="small text-muted">Monthly Classes</div>
             </div>
         </div>
         <div class="col-6 col-md-2">
             <div class="app-card glass-card p-3 text-center h-100">
-                <div class="fs-4 fw-bold">{{ $allTimeClasses }}</div>
+                <div class="fs-4 fw-bold unlockable" data-value="{{ $allTimeClasses }}" data-label="All time classes">*****</div>
                 <div class="small text-muted">All time classes</div>
             </div>
         </div>
         <div class="col-6 col-md-2">
             <div class="app-card glass-card p-3 text-center h-100">
-                <div class="fs-4 fw-bold">{{ number_format($totalSalary, 0) }}</div>
+                <div class="fs-4 fw-bold unlockable" data-value="{{ number_format($totalSalary, 0) }}" data-label="Monthly Salary">*****</div>
                 <div class="small text-muted">Monthly Salary</div>
             </div>
         </div>
         <div class="col-6 col-md-2">
             <div class="app-card glass-card p-3 text-center h-100">
-                <div class="fs-4 fw-bold">{{ number_format($allTimeSalary, 0) }}</div>
+                <div class="fs-4 fw-bold unlockable" data-value="{{ number_format($allTimeSalary, 0) }}" data-label="Total Salary">*****</div>
                 <div class="small text-muted">Total Salary</div>
             </div>
         </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function showUnlockPrompt(el) {
+            if (el.classList.contains('unlocked')) return;
+            const label = el.getAttribute('data-label') || '';
+            const pop = document.createElement('div');
+            pop.style.position = 'fixed';
+            pop.style.left = '50%';
+            pop.style.top = '30%';
+            pop.style.transform = 'translate(-50%, -50%)';
+            pop.style.background = 'rgba(20,20,20,0.98)';
+            pop.style.color = '#fff';
+            pop.style.padding = '32px 28px 24px 28px';
+            pop.style.borderRadius = '16px';
+            pop.style.boxShadow = '0 8px 32px rgba(0,0,0,0.18)';
+            pop.style.zIndex = 9999;
+            pop.innerHTML = `
+                <div style="font-size:1.2rem;margin-bottom:12px;text-align:center;">Sus!Gusto Makita hahahha</div>
+                <input type="password" id="unlockPass" class="form-control mb-3" placeholder="Enter password...">
+                <button class="btn btn-primary w-100" id="unlockBtn">Unlock</button>
+                <button class="btn btn-link w-100 mt-2" id="cancelBtn">Cancel</button>
+            `;
+            document.body.appendChild(pop);
+            document.getElementById('unlockPass').focus();
+            document.getElementById('unlockBtn').onclick = function() {
+                const pass = document.getElementById('unlockPass').value;
+                if (pass === 'secretngani2026') {
+                    el.textContent = el.getAttribute('data-value');
+                    el.classList.add('unlocked');
+                    pop.remove();
+                } else {
+                    document.getElementById('unlockPass').value = '';
+                    document.getElementById('unlockPass').placeholder = 'Wrong password!';
+                }
+            };
+            document.getElementById('cancelBtn').onclick = function(e) {
+                e.stopPropagation();
+                pop.remove();
+            };
+        }
+        document.querySelectorAll('.unlockable').forEach(function(el) {
+            el.addEventListener('click', function(e) {
+                showUnlockPrompt(el);
+            });
+            el.addEventListener('mouseenter', function(e) {
+                if (!el.classList.contains('unlocked')) {
+                    el.title = 'You want to know? hahahha';
+                }
+            });
+        });
+    });
+    </script>
     </div>
 
     <div class="row g-4 mb-4">

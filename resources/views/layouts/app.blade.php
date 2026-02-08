@@ -90,6 +90,12 @@
             color: var(--text);
         }
 
+        /* Make card titles and subtitles white */
+        .app-card .fs-4.fw-bold,
+        .app-card .small.text-muted {
+            color: #fff !important;
+        }
+
         .app-card-header{
             background: linear-gradient(135deg, rgba(255,255,255,.72) 0%, rgba(255,255,255,.58) 100%);
             border-bottom: 1px solid rgba(15,23,42,.08);
