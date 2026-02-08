@@ -133,7 +133,13 @@
                                     <td class="py-2 px-3">{{ $d['date'] }}</td>
                                     <td class="py-2 px-3">{{ $d['dow'] }}</td>
                                     <td class="py-2 px-3">{{ $d['classes_count'] }}</td>
-                                    <td class="py-2 px-3">{{ $d['absent'] ? 'Yes' : 'No' }}</td>
+                                    <td class="py-2 px-3">
+                                        @if(is_null($d['absent']))
+                                            —
+                                        @else
+                                            {{ $d['absent'] ? 'Yes' : 'No' }}
+                                        @endif
+                                    </td>
                                     <td class="py-2 px-3">{{ number_format($d['daily_salary'], 2) }}</td>
                                     <td></td>
                                 </tr>
@@ -149,20 +155,31 @@
         </div>
         <div class="col-lg-3">
             <div class="app-card shadow-sm rounded-4 border-0 p-4 glass-card h-100">
-                <h4 class="mb-3 text-primary">Fixed Students</h4>
+                <h4 class="mb-3 fw-bold fixed-gradient-title">Fixed Students</h4>
+                    <style>
+                        .fixed-gradient-title {
+                            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #fff 100%);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            text-fill-color: transparent;
+                            font-weight: bold;
+                            font-size: 2rem;
+                            /* No outline, just gradient text */
+                        }
+                    </style
                 @if(isset($fixedStudents) && count($fixedStudents) > 0)
                     <ul class="list-group list-group-flush bg-transparent">
                         @foreach($fixedStudents as $student)
                             <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 ps-0 pe-0">
-                                <span class="fw-semibold">{{ $student['name'] }}</span>
-                                <span class="text-muted small">
+                                <span class="fw-bold text-dark">{{ $student['name'] }}</span>
+                                <span class="fw-bold text-dark small">
                                     @if($student['age']) Age: {{ $student['age'] }} @else Age: N/A @endif<br>
-                                    <span class="text-primary">Booked: {{ $student['count'] }}x</span>
+                                    <span class="fw-bold text-white">Booked: {{ $student['count'] }}x</span>
                                 </span>
                             </li>
                         @endforeach
                     </ul>
-                    <div class="mt-2 text-muted">Total fixed students: <strong>{{ count($fixedStudents) }}</strong></div>
+                    <div class="mt-2 fw-bold text-dark">Total fixed students: <span class="fw-bold text-dark">{{ count($fixedStudents) }}</span></div>
                 @else
                     <div class="text-muted">No fixed students for this month.</div>
                 @endif

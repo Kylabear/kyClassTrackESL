@@ -73,17 +73,19 @@ class ReportController extends Controller
             ->pluck('classes_count', 'day');
 
         $days = [];
+        $today = Carbon::today();
         foreach (CarbonPeriod::create($start, $end) as $day) {
             // Only include days from Jan 16, 2026 onward
             if ($day->lessThan($firstDay)) continue;
             $dateStr = $day->toDateString();
             $count   = $classesPerDay[$dateStr] ?? 0;
+            $isFuture = $day->greaterThan($today);
             $days[] = [
                 'date'          => $dateStr,
                 'dow'           => $day->format('D'),
                 'classes_count' => $count,
                 'daily_salary'  => $count * 60,
-                'absent'        => $count === 0,
+                'absent'        => $isFuture ? null : ($count === 0),
             ];
         }
 

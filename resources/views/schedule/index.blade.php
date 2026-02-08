@@ -96,6 +96,7 @@
                     @php
                         $slotKey = $time->format('H:i:s');
                         $lesson = $lessons[$slotKey] ?? null;
+                        $isEmpty = empty($lesson) || (empty($lesson->student_name) && empty($lesson->age) && empty($lesson->notes));
                     @endphp
                     <tr>
                         <td>
@@ -108,6 +109,9 @@
                                    name="slots[{{ $slotKey }}][student_name]"
                                    class="form-control form-control-sm"
                                    value="{{ old("slots.{$slotKey}.student_name", $lesson->student_name ?? '') }}">
+                            @if($isEmpty)
+                                <span class="badge bg-info text-dark mt-1">Break Time</span>
+                            @endif
                         </td>
                         <td>
                             <input type="text"
