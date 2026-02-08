@@ -181,7 +181,7 @@
                         <a class="nav-link" href="{{ route('schedule.weekly') }}">Weekly Schedule</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ route('reports.monthly') }}">Monthly Report</a>
+                        <a class="nav-link" href="{{ route('reports.monthly') }}">Dashboard</a>
                     </li>
                 </ul>
             </div>

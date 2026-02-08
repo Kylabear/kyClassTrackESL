@@ -6,6 +6,7 @@ use App\Models\Lesson;
 use App\Models\ScheduleDay;
 use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ScheduleController extends Controller
 {
@@ -126,7 +127,7 @@ class ScheduleController extends Controller
         $slots = $request->input('slots', []); // [ '14:00:00' => [...], ... ]
         // Debug output
         
-        \Log::info('Schedule Save Request', [
+        Log::info('Schedule Save Request', [
             'date' => $date,
             'slots' => $slots,
         ]);
@@ -172,7 +173,7 @@ class ScheduleController extends Controller
             );
         }
 
-        \Log::info('Schedule Save Filled Count', [
+        Log::info('Schedule Save Filled Count', [
             'filledCount' => $filledCount,
         ]);
 

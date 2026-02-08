@@ -15,7 +15,16 @@ class ReportController extends Controller
     */
     public function monthly(Request $request)
     {
-        $userId = 1;
+        // Generate months list for selectors (Jan 2026 - Jun 2026)
+        $months = [];
+        $startMonth = \Carbon\Carbon::create(2026, 1, 1);
+        $endMonth = \Carbon\Carbon::create(2026, 6, 1);
+    while ($startMonth <= $endMonth) {
+        $months[] = $startMonth->format('Y-m');
+        $startMonth->addMonth();
+    }
+
+    $userId = 1;
         $firstDay = Carbon::create(2026, 1, 16);
         $monthRaw = $request->input('month', now()->format('Y-m'));
         // Always extract only the year and month (Y-m) from input
@@ -34,6 +43,25 @@ class ReportController extends Controller
 
         $start = $selectedMonth;
         $end   = (clone $start)->endOfMonth();
+
+        // Show only students with 5 or more total bookings (all time) as fixed students
+        $fixedStudentsRaw = Lesson::select('student_name', DB::raw('MAX(age) as age'), DB::raw('COUNT(*) as count'))
+            ->where('user_id', $userId)
+            ->whereNotNull('student_name')
+            ->groupBy('student_name')
+            ->havingRaw('COUNT(*) >= 5')
+            ->get();
+
+        $fixedStudents = $fixedStudentsRaw->map(function($row) {
+            return [
+                'name' => $row->student_name,
+                'age' => $row->age,
+                'count' => $row->count,
+            ];
+        })
+        ->sortByDesc('count')
+        ->values()
+        ->toArray();
 
         $classesPerDay = Lesson::select(
                 DB::raw('DATE(date) as day'),
@@ -85,7 +113,9 @@ class ReportController extends Controller
             'totalSalary',
             'allTimeClasses',
             'allTimeSalary',
-            'allTimePresentDays'
+            'allTimePresentDays',
+            'fixedStudents',
+            'months'
         ));
     }
 }
