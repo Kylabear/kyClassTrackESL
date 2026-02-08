@@ -17,8 +17,21 @@ class ScheduleController extends Controller
     {
         $userId = 1;
         $today = now()->toDateString();
-        $startOfWeek = now()->startOfWeek()->toDateString();
-        $endOfWeek = now()->endOfWeek()->toDateString();
+        $firstDay = '2026-01-16';
+
+        // Use selected date if provided, else default to today
+        $selectedDate = $request->input('date', $today);
+        // Clamp selected date to not be before Jan 16, 2026
+        if ($selectedDate < $firstDay) {
+            $selectedDate = $firstDay;
+        }
+        $startOfWeek = \Carbon\Carbon::parse($selectedDate)->startOfWeek()->toDateString();
+        $endOfWeek = \Carbon\Carbon::parse($selectedDate)->endOfWeek()->toDateString();
+
+        // Clamp startOfWeek to not be before Jan 16, 2026
+        if ($startOfWeek < $firstDay) {
+            $startOfWeek = $firstDay;
+        }
 
         $lessons = Lesson::where('user_id', $userId)
             ->whereBetween('date', [$startOfWeek, $endOfWeek])
