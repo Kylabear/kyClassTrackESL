@@ -44,7 +44,8 @@ class ReportController extends Controller
         $start = $selectedMonth;
         $end   = (clone $start)->endOfMonth();
 
-        // Show only students with 5 or more total bookings (all time) as fixed students
+
+        // Fixed students: 5 or more bookings
         $fixedStudentsRaw = Lesson::select('student_name', DB::raw('MAX(age) as age'), DB::raw('COUNT(*) as count'))
             ->where('user_id', $userId)
             ->whereNotNull('student_name')
@@ -53,6 +54,25 @@ class ReportController extends Controller
             ->get();
 
         $fixedStudents = $fixedStudentsRaw->map(function($row) {
+            return [
+                'name' => $row->student_name,
+                'age' => $row->age,
+                'count' => $row->count,
+            ];
+        })
+        ->sortByDesc('count')
+        ->values()
+        ->toArray();
+
+        // Other students: 1-4 bookings
+        $otherStudentsRaw = Lesson::select('student_name', DB::raw('MAX(age) as age'), DB::raw('COUNT(*) as count'))
+            ->where('user_id', $userId)
+            ->whereNotNull('student_name')
+            ->groupBy('student_name')
+            ->havingRaw('COUNT(*) >= 1 AND COUNT(*) <= 4')
+            ->get();
+
+        $otherStudents = $otherStudentsRaw->map(function($row) {
             return [
                 'name' => $row->student_name,
                 'age' => $row->age,
@@ -117,6 +137,7 @@ class ReportController extends Controller
             'allTimeSalary',
             'allTimePresentDays',
             'fixedStudents',
+            'otherStudents',
             'months'
         ));
     }

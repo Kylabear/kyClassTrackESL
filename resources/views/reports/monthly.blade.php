@@ -156,17 +156,17 @@
         <div class="col-lg-3">
             <div class="app-card shadow-sm rounded-4 border-0 p-4 glass-card h-100">
                 <h4 class="mb-3 fw-bold fixed-gradient-title">Fixed Students</h4>
-                    <style>
-                        .fixed-gradient-title {
-                            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #fff 100%);
-                            -webkit-background-clip: text;
-                            -webkit-text-fill-color: transparent;
-                            text-fill-color: transparent;
-                            font-weight: bold;
-                            font-size: 2rem;
-                            /* No outline, just gradient text */
-                        }
-                    </style
+                <style>
+                    .fixed-gradient-title {
+                        background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #fff 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        text-fill-color: transparent;
+                        font-weight: bold;
+                        font-size: 2rem;
+                        /* No outline, just gradient text */
+                    }
+                </style>
                 @if(isset($fixedStudents) && count($fixedStudents) > 0)
                     <ul class="list-group list-group-flush bg-transparent">
                         @foreach($fixedStudents as $student)
@@ -183,6 +183,59 @@
                 @else
                     <div class="text-muted">No fixed students for this month.</div>
                 @endif
+
+                <hr class="my-3">
+                <button class="btn btn-outline-primary w-100 fw-bold mb-2" onclick="showStudentPopup('other')">
+                    View Other Students
+                </button>
+                <div class="mt-2 fw-bold text-dark">Total other students: <span class="fw-bold text-dark">{{ isset($otherStudents) ? count($otherStudents) : 0 }}</span></div>
+
+
+<!-- Student Popups (move outside card for stacking context) -->
+@push('scripts')
+<style>
+#studentPopup { z-index: 2147483647 !important; }
+#studentPopupContent { z-index: 2147483648 !important; }
+</style>
+<div id="studentPopup" style="display:none;align-items:center;justify-content:center;position:fixed;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.35);z-index:2147483647 !important;">
+    <div id="studentPopupContent" class="glass-card" style="background: linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.45) 100%) !important; border: 1px solid rgba(15,23,42,0.10); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); padding:32px 24px 24px 24px; border-radius:16px; max-width:95vw; width:400px; max-height:80vh; overflow-y:auto; box-shadow:0 8px 32px rgba(0,0,0,0.18); position:relative; z-index:2147483648 !important;">
+        <button onclick="closeStudentPopup()" style="position:absolute;top:12px;right:16px;font-size:1.5rem;background:none;border:none;">&times;</button>
+        <h5 id="studentPopupTitle" class="mb-3 text-primary"></h5>
+        <ul id="studentPopupList" class="list-group list-group-flush bg-transparent"></ul>
+    </div>
+</div>
+<script>
+function showStudentPopup(type) {
+    var popup = document.getElementById('studentPopup');
+    var list = document.getElementById('studentPopupList');
+    var title = document.getElementById('studentPopupTitle');
+    list.innerHTML = '';
+    let students = [];
+    let isFixed = (type === 'fixed');
+    if (isFixed) {
+        students = @json($fixedStudents);
+        title.textContent = 'All Fixed Students';
+    } else {
+        students = @json($otherStudents);
+        title.textContent = 'All Other Students';
+    }
+    students.forEach(function(student) {
+        let li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center bg-transparent border-0 ps-0 pe-0';
+        li.innerHTML = `<span class='fw-bold text-dark'>${student.name}</span><span class='fw-bold text-dark small'>${student.age ? 'Age: ' + student.age : 'Age: N/A'}<br><span class='fw-bold text-primary'>Booked: ${student.count}x</span></span>`;
+        list.appendChild(li);
+    });
+    popup.style.display = 'flex';
+    popup.focus();
+}
+function closeStudentPopup() {
+    document.getElementById('studentPopup').style.display = 'none';
+}
+</script>
+@endpush
+
+                <hr class="my-3">
+                <div class="fw-bold text-dark">Total students overall: <span class="fw-bold text-dark">{{ (isset($fixedStudents) ? count($fixedStudents) : 0) + (isset($otherStudents) ? count($otherStudents) : 0) }}</span></div>
             </div>
         </div>
     </div>
@@ -215,6 +268,7 @@
         .fw-bold { font-weight: 700 !important; }
         .list-group-item.bg-transparent { background: transparent !important; }
     </style>
+    @stack('scripts')
 
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
