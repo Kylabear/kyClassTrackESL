@@ -19,38 +19,39 @@
         </div>
     </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-6 col-md-2">
-            <div class="app-card glass-card p-3 text-center h-100">
+    <!-- Summary Cards Row -->
+    <div class="row g-3 mb-4 align-items-stretch">
+        <div class="col-6 col-sm-4 col-md-2 mb-3 mb-md-0 d-flex align-items-stretch">
+            <div class="app-card glass-card p-3 text-center w-100 d-flex flex-column justify-content-center" style="min-height: 120px;">
                 <div class="fs-4 fw-bold">{{ $allTimePresentDays }}</div>
                 <div class="small text-muted">Present days</div>
             </div>
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-sm-4 col-md-2 mb-3 mb-md-0">
             <div class="app-card glass-card p-3 text-center h-100">
                 <div class="fs-4 fw-bold">{{ $totalAbsent }}</div>
                 <div class="small text-muted">Absent days</div>
             </div>
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-sm-4 col-md-2 mb-3 mb-md-0">
             <div class="app-card glass-card p-3 text-center h-100">
                 <div class="fs-4 fw-bold unlockable" data-value="{{ $totalClasses }}" data-label="Monthly Classes">*****</div>
                 <div class="small text-muted">Monthly Classes</div>
             </div>
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-sm-4 col-md-2 mb-3 mb-md-0">
             <div class="app-card glass-card p-3 text-center h-100">
                 <div class="fs-4 fw-bold unlockable" data-value="{{ $allTimeClasses }}" data-label="All time classes">*****</div>
                 <div class="small text-muted">All time classes</div>
             </div>
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-sm-4 col-md-2 mb-3 mb-md-0">
             <div class="app-card glass-card p-3 text-center h-100">
                 <div class="fs-4 fw-bold unlockable" data-value="{{ number_format($totalSalary, 0) }}" data-label="Monthly Salary">*****</div>
                 <div class="small text-muted">Monthly Salary</div>
             </div>
         </div>
-        <div class="col-6 col-md-2">
+        <div class="col-6 col-sm-4 col-md-2 mb-3 mb-md-0">
             <div class="app-card glass-card p-3 text-center h-100">
                 <div class="fs-4 fw-bold unlockable" data-value="{{ number_format($allTimeSalary, 0) }}" data-label="Total Salary">*****</div>
                 <div class="small text-muted">Total Salary</div>
@@ -112,9 +113,10 @@
     </script>
     </div>
 
-    <div class="row g-4 mb-4">
-        <div class="col-lg-9">
-            <div class="app-card shadow-sm rounded-4 border-0 p-4 bg-white glass-card mb-4">
+    <!-- Table and Fixed Students Row -->
+    <div class="row g-4 mb-4 align-items-start">
+        <div class="col-12 col-lg-9 mb-4 mb-lg-0 d-flex flex-column h-100">
+            <div class="app-card shadow-sm rounded-4 border-0 p-4 bg-white glass-card mb-4 h-100">
                 <div class="table-responsive">
                     <table class="table table-striped align-middle modern-table mb-0">
                         <thead class="table-primary text-dark fs-6">
@@ -153,8 +155,8 @@
                 <canvas id="classesChart" height="120"></canvas>
             </div>
         </div>
-        <div class="col-lg-3">
-            <div class="app-card shadow-sm rounded-4 border-0 p-4 glass-card h-100">
+        <div class="col-12 col-lg-3 d-flex flex-column h-100">
+            <div class="app-card shadow-sm rounded-4 border-0 p-3 p-md-4 glass-card h-100">
                 <h4 class="mb-3 fw-bold fixed-gradient-title">Fixed Students</h4>
                 <style>
                     .fixed-gradient-title {
@@ -267,7 +269,29 @@ function closeStudentPopup() {
         }
         .fw-bold { font-weight: 700 !important; }
         .list-group-item.bg-transparent { background: transparent !important; }
+
+        /* Responsive adjustments */
+        @media (max-width: 991.98px) {
+            .col-lg-9, .col-lg-3 { flex: 0 0 100%; max-width: 100%; }
+            .app-card { margin-bottom: 1.5rem; }
+        }
+        @media (max-width: 767.98px) {
+            .modern-table th, .modern-table td { font-size: 0.95rem; padding: 0.5rem 0.5rem; }
+            .app-card, .glass-card { padding: 1rem !important; }
+            .rounded-4 { border-radius: 1rem !important; }
+        }
+        @media (max-width: 575.98px) {
+            .modern-table th, .modern-table td { font-size: 0.85rem; padding: 0.35rem 0.25rem; }
+            .app-card, .glass-card { padding: 0.5rem !important; }
+            .rounded-4 { border-radius: 0.5rem !important; }
+            .p-4 { padding: 1rem !important; }
+        }
+        #studentPopupContent { width: 95vw; max-width: 400px; }
+        @media (max-width: 575.98px) {
+            #studentPopupContent { width: 99vw; max-width: 99vw; padding: 0.5rem !important; }
+        }
     </style>
+    @stack('scripts')
     @stack('scripts')
 
     <!-- Chart.js CDN -->
