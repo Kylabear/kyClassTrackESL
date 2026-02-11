@@ -16,6 +16,8 @@ Route::get('/schedule/weekly', [ScheduleController::class, 'weekly'])->name('sch
 Route::get('/schedule/upcoming', [ScheduleController::class, 'upcoming'])->name('schedule.upcoming');
 Route::get('/schedule/past', [ScheduleController::class, 'past'])->name('schedule.past');
 Route::delete('/schedule/{id}/delete', [ScheduleController::class, 'delete'])->name('schedule.delete');
+// AutoSched routes
+Route::post('/schedule/autosched', [ScheduleController::class, 'autosched'])->name('schedule.autosched');
 
 // Report routes
 Route::get('/reports/monthly', [ReportController::class, 'monthly'])->name('reports.monthly');

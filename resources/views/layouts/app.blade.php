@@ -80,14 +80,15 @@
         }
 
         .app-card{
-            background: linear-gradient(135deg, var(--glass) 0%, var(--glass2) 100%);
-            border: 1px solid var(--glassBorder);
-            border-radius: 16px;
-            box-shadow: 0 18px 40px rgba(2,6,23,.12);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            background: linear-gradient(135deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.10) 100%);
+            border: 1.5px solid rgba(255,255,255,0.22);
+            border-radius: 22px;
+            box-shadow: 0 8px 32px 0 rgba(31,38,135,0.18), 0 1.5px 8px 0 rgba(37,99,235,0.10);
+            backdrop-filter: blur(18px) saturate(160%);
+            -webkit-backdrop-filter: blur(18px) saturate(160%);
             overflow: hidden;
             color: var(--text);
+            transition: box-shadow 0.2s, border 0.2s;
         }
 
         /* Make card titles and subtitles white */
@@ -197,6 +198,10 @@
     <main class="app-shell">
         @yield('content')
     </main>
+    
+        <!-- Bootstrap JS (with Popper) for modal functionality -->
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js" crossorigin="anonymous"></script>
 </body>
 </html>
 

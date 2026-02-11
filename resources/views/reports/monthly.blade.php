@@ -151,22 +151,33 @@
                 </div>
             </div>
             <div class="app-card shadow-sm rounded-4 border-0 p-4 bg-white glass-card">
-                <h5 class="mb-3 text-primary">Classes per Day (Bar Chart)</h5>
+                <h5 class="mb-3 text-primary">Classes per Day</h5>
                 <canvas id="classesChart" height="120"></canvas>
             </div>
         </div>
         <div class="col-12 col-lg-3 d-flex flex-column h-100">
             <div class="app-card shadow-sm rounded-4 border-0 p-3 p-md-4 glass-card h-100">
-                <h4 class="mb-3 fw-bold fixed-gradient-title">Fixed Students</h4>
+
+                <h4 class="mb-1 fw-bold fixed-gradient-title">Fixed Students</h4>
+                <div class="mb-3 text-center">
+                    <span class="fw-bold fixed-gradient-count">Total fixed students: {{ count($fixedStudents ?? []) }}</span>
+                </div>
                 <style>
                     .fixed-gradient-title {
-                        background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #fff 100%);
+                        background: linear-gradient(90deg, #000 0%, #f00 50%, #00f 100%);
                         -webkit-background-clip: text;
                         -webkit-text-fill-color: transparent;
                         text-fill-color: transparent;
                         font-weight: bold;
                         font-size: 2rem;
-                        /* No outline, just gradient text */
+                    }
+                    .fixed-gradient-count {
+                        background: linear-gradient(90deg, #000 0%, #f00 50%, #00f 100%);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        text-fill-color: transparent;
+                        font-weight: bold;
+                        font-size: 1rem;
                     }
                 </style>
                 @if(isset($fixedStudents) && count($fixedStudents) > 0)
@@ -181,7 +192,6 @@
                             </li>
                         @endforeach
                     </ul>
-                    <div class="mt-2 fw-bold text-dark">Total fixed students: <span class="fw-bold text-dark">{{ count($fixedStudents) }}</span></div>
                 @else
                     <div class="text-muted">No fixed students for this month.</div>
                 @endif

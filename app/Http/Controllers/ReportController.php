@@ -45,10 +45,11 @@ class ReportController extends Controller
         $end   = (clone $start)->endOfMonth();
 
 
-        // Fixed students: 5 or more bookings
+        // Fixed students: 5 or more bookings, exclude 'Breaktime'
         $fixedStudentsRaw = Lesson::select('student_name', DB::raw('MAX(age) as age'), DB::raw('COUNT(*) as count'))
             ->where('user_id', $userId)
             ->whereNotNull('student_name')
+            ->where('student_name', '!=', 'Breaktime')
             ->groupBy('student_name')
             ->havingRaw('COUNT(*) >= 5')
             ->get();
@@ -64,10 +65,11 @@ class ReportController extends Controller
         ->values()
         ->toArray();
 
-        // Other students: 1-4 bookings
+        // Other students: 1-4 bookings, exclude 'Breaktime'
         $otherStudentsRaw = Lesson::select('student_name', DB::raw('MAX(age) as age'), DB::raw('COUNT(*) as count'))
             ->where('user_id', $userId)
             ->whereNotNull('student_name')
+            ->where('student_name', '!=', 'Breaktime')
             ->groupBy('student_name')
             ->havingRaw('COUNT(*) >= 1 AND COUNT(*) <= 4')
             ->get();
@@ -89,6 +91,7 @@ class ReportController extends Controller
             )
             ->where('user_id', $userId)
             ->whereBetween('date', [$start, $end])
+            ->where('student_name', '!=', 'Breaktime')
             ->groupBy('day')
             ->pluck('classes_count', 'day');
 
@@ -119,11 +122,13 @@ class ReportController extends Controller
         // All-time present days: count unique days with at least one class
         $allTimePresentDays = Lesson::where('user_id', $userId)
             ->whereBetween('date', [$firstDay->toDateString(), $allTimeEnd])
+            ->where('student_name', '!=', 'Breaktime')
             ->distinct('date')
             ->count('date');
 
         $allTimeClasses = Lesson::where('user_id', $userId)
             ->whereBetween('date', [$firstDay->toDateString(), $allTimeEnd])
+            ->where('student_name', '!=', 'Breaktime')
             ->count();
         $allTimeSalary = $allTimeClasses * 60;
 

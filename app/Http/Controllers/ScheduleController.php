@@ -11,6 +11,71 @@ use Illuminate\Support\Facades\Log;
 class ScheduleController extends Controller
 {
     /**
+     * Handle AutoSched batch scheduling form submission.
+     */
+    public function autosched(Request $request)
+    {
+        $request->validate([
+            'auto_sched_student_name' => 'required|string',
+            'auto_sched_age' => 'required|integer',
+            'from_date' => 'required|date',
+            'to_date' => 'required|date|after_or_equal:from_date',
+            'from_time' => 'required',
+            'to_time' => 'required',
+        ]);
+
+        $userId = 1; // Or get from auth
+        $studentName = $request->input('auto_sched_student_name');
+        $age = $request->input('auto_sched_age');
+        $fromDate = $request->input('from_date');
+        $toDate = $request->input('to_date');
+        $fromTime = $request->input('from_time');
+        $toTime = $request->input('to_time');
+
+        $period = \Carbon\CarbonPeriod::create($fromDate, $toDate);
+        foreach ($period as $date) {
+            $targetDate = $date->toDateString();
+            $scheduleDay = \App\Models\ScheduleDay::firstOrCreate(
+                ['user_id' => $userId, 'date' => $targetDate],
+                ['is_locked' => false, 'locked_at' => null]
+            );
+            if ($scheduleDay->is_locked) continue;
+
+            // 30-min slots from 14:00 to 23:30
+            $slotTimes = [];
+            $start = strtotime('14:00');
+            $end = strtotime('23:30');
+            for ($t = $start; $t <= $end; $t += 30 * 60) {
+                $slot = date('H:i:s', $t);
+                if ($slot >= $fromTime && $slot <= $toTime) {
+                    $slotTimes[] = $slot;
+                }
+            }
+            foreach ($slotTimes as $slotTime) {
+                $count = \App\Models\Lesson::where('user_id', $userId)
+                    ->where('student_name', $studentName)
+                    ->count();
+                $isFixed = $count >= 4;
+                \App\Models\Lesson::updateOrCreate(
+                    [
+                        'user_id'     => $userId,
+                        'date'        => $targetDate,
+                        'start_time'  => $slotTime,
+                    ],
+                    [
+                        'student_name' => $studentName,
+                        'age'          => $age,
+                        'notes'        => null,
+                        'is_fixed_student' => $isFixed,
+                    ]
+                );
+            }
+        }
+
+        return redirect()->route('schedule.index', ['date' => $fromDate])
+            ->with('status', 'AutoSched batch schedule saved!');
+    }
+    /**
      * Show the weekly schedule (upcoming and past).
      */
     public function weekly(Request $request)
@@ -125,87 +190,136 @@ class ScheduleController extends Controller
     {
         $userId = 1;
         $date = $request->input('date');
+        $slots = $request->input('slots', []); // [ '14:00:00' => [...], ... ]
 
-        $scheduleDay = ScheduleDay::firstOrCreate(
-            ['user_id' => $userId, 'date' => $date],
-            ['is_locked' => false, 'locked_at' => null]
-        );
+        // Check for batch scheduling (AutoSched)
+        $autoSched = $request->input('auto_sched', false);
+        $fromDate = $request->input('from_date');
+        $toDate = $request->input('to_date');
+        $fromTime = $request->input('from_time');
+        $toTime = $request->input('to_time');
+        $autoStudent = $request->input('auto_sched_student_name');
+        $autoAge = $request->input('auto_sched_age');
 
-        if ($scheduleDay->is_locked) {
-            return redirect()
-                ->route('schedule.index', ['date' => $date])
-                ->with('status', 'This day is locked. Click Update to edit.');
+        $dates = collect([$date]);
+        if ($autoSched && $fromDate && $toDate) {
+            try {
+                $period = \Carbon\CarbonPeriod::create($fromDate, $toDate);
+                $dates = collect();
+                foreach ($period as $d) {
+                    $dates->push($d->toDateString());
+                }
+            } catch (\Exception $e) {
+                $dates = collect([$date]);
+            }
         }
 
-        $slots = $request->input('slots', []); // [ '14:00:00' => [...], ... ]
-        // Debug output
-        
-        Log::info('Schedule Save Request', [
-            'date' => $date,
-            'slots' => $slots,
-        ]);
-
         $filledCount = 0;
-        foreach ($slots as $time => $data) {
-            // Always use H:i:s for start_time
-            $startTime = date('H:i:s', strtotime($time));
-            $hasData = filled($data['student_name'] ?? null)
-                || filled($data['age'] ?? null)
-                || filled($data['notes'] ?? null);
+        foreach ($dates as $targetDate) {
+            $scheduleDay = ScheduleDay::firstOrCreate(
+                ['user_id' => $userId, 'date' => $targetDate],
+                ['is_locked' => false, 'locked_at' => null]
+            );
 
-            if (! $hasData) {
-                Lesson::where('user_id', $userId)
-                    ->whereDate('date', $date)
-                    ->where('start_time', $startTime)
-                    ->delete();
+            if ($scheduleDay->is_locked) {
                 continue;
             }
 
-            $filledCount++;
-            $studentName = $data['student_name'] ?? null;
-            $isFixed = false;
-            if ($studentName) {
-                $count = Lesson::where('user_id', $userId)
-                    ->where('student_name', $studentName)
-                    ->count();
-                $isFixed = $count >= 4; // This will be the 5th booking
+            // If batch scheduling, ignore slots and use time range
+            if ($autoSched && $fromTime && $toTime && $autoStudent) {
+                // 30-min slots from 14:00 to 23:30
+                $slotTimes = [];
+                $start = strtotime('14:00');
+                $end = strtotime('23:30');
+                for ($t = $start; $t <= $end; $t += 30 * 60) {
+                    $slot = date('H:i:s', $t);
+                    if ($slot >= $fromTime && $slot <= $toTime) {
+                        $slotTimes[] = $slot;
+                    }
+                }
+                foreach ($slotTimes as $slotTime) {
+                    $filledCount++;
+                    $isFixed = false;
+                    $count = Lesson::where('user_id', $userId)
+                        ->where('student_name', $autoStudent)
+                        ->count();
+                    $isFixed = $count >= 4;
+                    Lesson::updateOrCreate(
+                        [
+                            'user_id'     => $userId,
+                            'date'        => $targetDate,
+                            'start_time'  => $slotTime,
+                        ],
+                        [
+                            'student_name' => $autoStudent,
+                            'age'          => $autoAge,
+                            'notes'        => null,
+                            'is_fixed_student' => $isFixed,
+                        ]
+                    );
+                }
+            } else {
+                // Manual (single day) scheduling
+                foreach ($slots as $time => $data) {
+                    $startTime = date('H:i:s', strtotime($time));
+                    $hasData = filled($data['student_name'] ?? null)
+                        || filled($data['age'] ?? null)
+                        || filled($data['notes'] ?? null);
+
+                    if (! $hasData) {
+                        Lesson::where('user_id', $userId)
+                            ->whereDate('date', $targetDate)
+                            ->where('start_time', $startTime)
+                            ->delete();
+                        continue;
+                    }
+
+                    $filledCount++;
+                    $studentName = $data['student_name'] ?? null;
+                    $isFixed = false;
+                    if ($studentName) {
+                        $count = Lesson::where('user_id', $userId)
+                            ->where('student_name', $studentName)
+                            ->count();
+                        $isFixed = $count >= 4; // This will be the 5th booking
+                    }
+
+                    Lesson::updateOrCreate(
+                        [
+                            'user_id'     => $userId,
+                            'date'        => $targetDate,
+                            'start_time'  => $startTime,
+                        ],
+                        [
+                            'student_name' => $studentName,
+                            'age'          => $data['age'] ?? null,
+                            'notes'        => $data['notes'] ?? null,
+                            'is_fixed_student' => $isFixed,
+                        ]
+                    );
+                }
             }
 
-            Lesson::updateOrCreate(
-                [
-                    'user_id'     => $userId,
-                    'date'        => $date,
-                    'start_time'  => $startTime,
-                ],
-                [
-                    'student_name' => $studentName,
-                    'age'          => $data['age'] ?? null,
-                    'notes'        => $data['notes'] ?? null,
-                    'is_fixed_student' => $isFixed,
-                ]
-            );
+            if ($filledCount > 0) {
+                $scheduleDay->forceFill([
+                    'is_locked' => true,
+                    'locked_at' => now(),
+                ])->save();
+            } else {
+                $scheduleDay->forceFill([
+                    'is_locked' => false,
+                    'locked_at' => null,
+                ])->save();
+            }
         }
 
-        Log::info('Schedule Save Filled Count', [
-            'filledCount' => $filledCount,
-        ]);
+        $status = $filledCount > 0
+            ? 'Schedule saved and locked for selected days.'
+            : 'No schedule placed. Days remain editable.';
 
-        if ($filledCount > 0) {
-            $scheduleDay->forceFill([
-                'is_locked' => true,
-                'locked_at' => now(),
-            ])->save();
-            $status = 'Schedule saved and locked.';
-        } else {
-            $scheduleDay->forceFill([
-                'is_locked' => false,
-                'locked_at' => null,
-            ])->save();
-            $status = 'No schedule placed. Day remains editable.';
-        }
-
+        // Redirect to the first date in the range
         return redirect()
-            ->route('schedule.index', ['date' => $date])
+            ->route('schedule.index', ['date' => $dates->first()])
             ->with('status', $status);
     }
     /**
